@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Is MX Bikes Down?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="blem.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+            text-align: center;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 1.5em;
+            text-align: center;
+        }
+        #status {
+            font-size: 1.5em;
+            padding: 0.75em 1.5em;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon {
+            margin-right: 0.5em;
+        }
+        .divider {
+            margin-left: 0.5em;
+            margin-right: 0.5em;
+            height: 1em;
+            width: 1px;
+            background-color: #ffffff;
+        }
+        .spinner {
+            margin-right: 0.5em;
+            animation: spin 1s linear infinite;
+        }
+        .more-info {
+            font-size: 1em;
+            color: #4caf50;
+            text-decoration: none;
+        }
+        .more-info:hover {
+            text-decoration: underline;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            p {
+                font-size: 1em;
+            }
+            #status {
+                font-size: 1.2em;
+                padding: 0.5em 1em;
+            }
+        }
+        footer {
+            position: absolute;
+            bottom: 20px;
+            text-align: center;
+            width: 100%;
+            font-size: 0.9em;
+            color: #888888;
+        }
+        .btn {
+            padding: 0.5em 1em;
+            margin: 0.5em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #ffffff;
+        }
+        .btn-up {
+            background-color: #4caf50;
+        }
+        .btn-down {
+            background-color: #f44336;
+        }
+        .btn-laggy {
+            background-color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Is MxBikes Down?</h1>
+    <p>Check the current status of the MxBikes server instantly.</p>
+    <div id="status"><i class="fa-regular fa-spinner-third spinner"></i> Checking...</div>
+    <div id="ping-status"></div>
+
+    <script>
+        function updatePingStatus(ping) {
+            let pingStatusDiv = document.getElementById('ping-status');
+            pingStatusDiv.textContent = `Average latency: ${ping.toFixed(2)} ms`;
+        }
+
+        async function gatherPingData() {
+            let totalPing = 0;
+            let count = 0;
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    let startTime = performance.now();
+                    await fetch('https://cors-anywhere.herokuapp.com/http://51.254.112.5:80', { mode: 'cors' });
+                    let latency = performance.now() - startTime;
+                    totalPing += latency;
+                    count++;
+                } catch (error) {
+                    // Skip this ping and continue with the next one
+                    console.error('Error fetching ping:', error);
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
+            }
+
+            if (count === 0) {
+                throw new Error('No successful pings');
+            }
+
+            let averagePing = totalPing / count;
+            return averagePing;
+        }
+
+        async function checkServerStatus() {
+            try {
+                let averagePing = await gatherPingData();
+                updatePingStatus(averagePing);
+
+                let statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = ''; // Clear previous content
+
+                let icon = document.createElement('i');
+                let textNode;
+
+                if (averagePing < 165) {
+                    icon.className = 'fa-solid fa-circle-check icon';
+                    textNode = document.createTextNode('MX Bikes is Up');
+                    statusDiv.style.backgroundColor = '#4caf50'; // green
+                } else if (averagePing < 500) {
+                    icon.className = 'fa-solid fa-exclamation-triangle icon';
+                    textNode = document.createTextNode('MX Bikes is Laggy');
+                    statusDiv.style.backgroundColor = '#ff9800'; // orange
+                } else {
+                    icon.className = 'fa-sharp fa-solid fa-circle-exclamation icon';
+                    textNode = document.createTextNode('MX Bikes is Possibly Down');
+                    statusDiv.style.backgroundColor = '#f44336'; // red
+                }
+
+                statusDiv.appendChild(icon);
+                statusDiv.appendChild(textNode);
+            } catch (error) {
+                let statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = ''; // Clear previous content
+                let icon = document.createElement('i');
+                icon.className = 'fa-sharp fa-solid fa-circle-exclamation icon';
+                let textNode = document.createTextNode('Error checking status');
+                statusDiv.style.backgroundColor = '#f44336'; // red
+
+                statusDiv.appendChild(icon);
+                statusDiv.appendChild(textNode);
+
+                // Add divider
+                let divider = document.createElement('div');
+                divider.className = 'divider';
+                statusDiv.appendChild(divider);
+
+                // Add Discord icon and More Information link for error case
+                let discordIcon = document.createElement('i');
+                discordIcon.className = 'fa-brands fa-discord icon';
+                statusDiv.appendChild(discordIcon);
+
+                let moreInfoLink = document.createElement('a');
+                moreInfoLink.href = 'https://discord.com/channels/your-discord-server-id/announcement-channel-id';
+                moreInfoLink.className = 'more-info';
+                moreInfoLink.target = '_blank';
+                moreInfoLink.textContent = 'More Information';
+                statusDiv.appendChild(moreInfoLink);
+            }
+        }
+
+        checkServerStatus();
+    </script>
+    <footer>
+        <div>Created by <b>bazhar</b> | ©2024 All rights reserved.</div>
+        <div>Unofficial Checker | Visit MX Bikes community Discord for confirmation.</div>
+    </footer>
+</body>
+
+</html>
