@@ -196,23 +196,6 @@
 
                 statusDiv.appendChild(icon);
                 statusDiv.appendChild(textNode);
-
-                // Add divider
-                let divider = document.createElement('div');
-                divider.className = 'divider';
-                statusDiv.appendChild(divider);
-
-                // Add Discord icon and More Information link for error case
-                let discordIcon = document.createElement('i');
-                discordIcon.className = 'fa-brands fa-discord icon';
-                statusDiv.appendChild(discordIcon);
-
-                let moreInfoLink = document.createElement('a');
-                moreInfoLink.href = 'https://discord.com/channels/your-discord-server-id/announcement-channel-id';
-                moreInfoLink.className = 'more-info';
-                moreInfoLink.target = '_blank';
-                moreInfoLink.textContent = 'More Information';
-                statusDiv.appendChild(moreInfoLink);
             }
         }
 
